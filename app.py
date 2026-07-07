@@ -1,20 +1,21 @@
 from fastapi import FastAPI
-import time
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return {
-        "status": "healthy", 
-        "message": "Welcome to my DevOps Portfolio API!"
-    }
+    return """
+    <html>
+        <body>
+            <h1>My DevOps Portfolio Project</h1>
+            <p>FastAPI app deployed on AWS EC2 using Terraform, Docker, Nginx, and GitHub Actions.</p>
+            <p><a href="/health">Health Check</a></p>
+            <p><a href="/docs">API Docs</a></p>
+        </body>
+    </html>
+    """
 
-@app.get("/compute")
-def do_work():
-    # This endpoint simulates a heavy task so we can test monitoring later
-    start_time = time.time()
-    y = 0
-    for i in range(1_000_000):
-        y += i
-    return {"status": "success", "execution_time": time.time() - start_time}
+@app.get("/health")
+def health():
+    return {"status": "ok"}

@@ -1,0 +1,35 @@
+name: Automated DevOps Pipeline - FastAPI Deployment
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            if [ ! -d "$HOME/app" ]; then
+              git clone https://github.com/${{ github.repository }}.git $HOME/app
+            fi
+
+            cd $HOME/app
+            git fetch --all
+            git reset --hard origin/main
+
+            docker build -t fastapi-app .
+            docker stop fastapi-container || true
+            docker rm fastapi-container || true
+            docker run -d --name fastapi-container -p 8000:8000 fastapi-app
+            sleep 3
+            curl -f http://127.0.0.1:8000 || echo "Warning: App may not have started correctly, check uvicorn.log"
