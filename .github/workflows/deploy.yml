@@ -19,6 +19,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            set -e
+
             if [ ! -d "$HOME/app" ]; then
               git clone https://github.com/${{ github.repository }}.git $HOME/app
             fi
@@ -28,8 +30,18 @@ jobs:
             git reset --hard origin/main
 
             docker build -t fastapi-app .
-            docker stop fastapi-container || true
-            docker rm fastapi-container || true
+
+            docker stop fastapi-container 2>/dev/null || true
+            docker rm fastapi-container 2>/dev/null || true
+
             docker run -d --name fastapi-container -p 8000:8000 fastapi-app
+
             sleep 3
-            curl -f http://127.0.0.1:8000 || echo "Warning: App may not have started correctly, check uvicorn.log"
+
+            if ! curl -f http://127.0.0.1:8000; then
+              echo "ERROR: App failed to start correctly"
+              docker logs fastapi-container
+              exit 1
+            fi
+
+            echo "Deployment successful"
