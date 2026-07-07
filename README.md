@@ -85,5 +85,5 @@ main.tf                         - terraform infrastructure code
 .terraform.lock.hcl             - locks Terraform provider versions
 .github/workflows/deploy.yml    - the CI/CD pipeline
 .gitignore
-README.md                       - project overview and documents
+README.md                       - project overview and documents 
 ```
